@@ -1,0 +1,4 @@
+.zed/
+.cache/
+build/
+compile_commands.json
