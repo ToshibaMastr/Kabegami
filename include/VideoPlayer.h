@@ -45,6 +45,7 @@ public:
     VideoPlayer(GMainLoop *loop, const VideoSettings& settings);
     ~VideoPlayer();
 
+    bool init();
     bool start();
     void stop();
 

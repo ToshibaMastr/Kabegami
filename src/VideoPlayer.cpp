@@ -26,7 +26,7 @@ VideoPlayer::~VideoPlayer() {
     stop();
 }
 
-bool VideoPlayer::start() {
+bool VideoPlayer::init() {
     pipeline = gst_pipeline_new("video-player");
     source = gst_element_factory_make("filesrc", nullptr);
     demuxer = gst_element_factory_make("qtdemux", nullptr);
@@ -35,7 +35,7 @@ bool VideoPlayer::start() {
     tee = gst_element_factory_make("tee", nullptr);
 
     if (!pipeline || !source || !demuxer || !decoder || !converter || !tee) {
-        gst_printerrln("One element could not be created. Exiting.");
+        gst_printerrln("One element could not be created. Exiting."); // 𓆏
         return false;
     }
 
@@ -59,7 +59,10 @@ bool VideoPlayer::start() {
     GstBus *bus = gst_pipeline_get_bus(GST_PIPELINE(pipeline));
     gst_bus_add_watch(bus, busCall, this);
     gst_object_unref(bus);
+    return true;
+}
 
+bool VideoPlayer::start() {
     GstStateChangeReturn ret = gst_element_set_state(pipeline, GST_STATE_PLAYING);
     if (ret == GST_STATE_CHANGE_FAILURE) {
         gst_printerrln("Pipeline failed to start.");

@@ -162,6 +162,9 @@ int main(int argc, char *argv[]) {
     GMainLoop *loop = g_main_loop_new(NULL, FALSE);
 
     VideoPlayer videoPlayer(loop, settings);
+    if (!videoPlayer.init()) {
+        return -1;
+    }
 
     Display *display = XOpenDisplay(NULL);
     if (!display) {
