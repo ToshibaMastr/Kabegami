@@ -1,15 +1,15 @@
 # Kabegami ❖
-**Kabegami** — это приложение для установки видео обоев на рабочий стол
-- Простота использования
+**Kabegami** is an application for setting video wallpapers on your desktop.
+- Easy to use
 
-## Установка
-### 1. Установка зависимостей
+## Installation
+### 1. Install Dependencies
 ```sh
 sudo apt-get update
 sudo apt-get install build-essential cmake libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libx11-dev libxrandr-dev
 ```
 
-### 2. Сборка
+### 2. Build
 ```sh
 git clone https://github.com/ToshibaMastr/Kabegami
 cd Kabegami
@@ -17,31 +17,31 @@ mkdir build && cd build
 cmake .. && make
 ```
 
-### 3 Установка в систему
+### 3. Install
 ```sh
 sudo -E make install
 ```
 
-### 4 Удаление из системы
+### 4. Uninstall
 ```sh
 sudo make uninstall
 ```
 
-## Быстрый запуск
+## Quick Start
 
-Запуск **Kabegami** с установкой обоев `video.mp4` и бесконечный повтор:
+Run **Kabegami** with `video.mp4` wallpaper and infinite loop:
 
 ```sh
 kabegami --loop video.mp4
 ```
 
-## Документация
+## Documentation
 
-Для получения информации о доступныхопциях запуска используйте:
+For information about available options, use:
 
 ```sh
 kabegami --help
 ```
 
-## Лицензия
-Этот проект лицензирован на условиях GNU General Public License v3.0. Подробности смотрите в файле [LICENSE](LICENSE).
+## License
+This project is licensed under the terms of the GNU General Public License v3.0. For details, see the [LICENSE](LICENSE) file.
