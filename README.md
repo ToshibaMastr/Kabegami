@@ -1,6 +1,6 @@
 # Kabegami ❖
 
-![marquee](./docs/demo.gif)
+![demo](./docs/demo.gif)
 
 **Kabegami** is an application for setting video wallpapers on your desktop.
 
