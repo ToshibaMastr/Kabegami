@@ -53,17 +53,12 @@ public:
 
 private:
     static void onNewPad(GstElement *element, GstPad *pad, GstElement *data);
-    static gboolean busCall(GstBus *bus, GstMessage *msg, gpointer data);
+    static gboolean onBusMessage(GstBus *bus, GstMessage *msg, gpointer data);
 
 private:
     VideoSettings settings;
 
-    GMainLoop *loop;
+    GMainLoop  *loop;
 
     GstElement *pipeline;
-    GstElement *source;
-    GstElement *demuxer;
-    GstElement *decoder;
-    GstElement *converter;
-    GstElement *tee;
 };

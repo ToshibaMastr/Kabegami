@@ -180,7 +180,7 @@ int main(int argc, char *argv[]) {
         return -1;
     }
 
-    int num_screens = screen_resources->ncrtc;
+    int num_screens = screen_resources->noutput;
     std::vector<XWPWindow> windows(num_screens);
 
     for (int i = 0; i < num_screens; i++) {

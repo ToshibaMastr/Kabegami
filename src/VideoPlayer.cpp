@@ -28,11 +28,11 @@ VideoPlayer::~VideoPlayer() {
 
 bool VideoPlayer::init() {
     pipeline = gst_pipeline_new("video-player");
-    source = gst_element_factory_make("filesrc", nullptr);
-    demuxer = gst_element_factory_make("qtdemux", nullptr);
-    decoder = gst_element_factory_make("decodebin3", nullptr);
-    converter = gst_element_factory_make("videoconvert", nullptr);
-    tee = gst_element_factory_make("tee", nullptr);
+    GstElement *source = gst_element_factory_make("filesrc", nullptr);
+    GstElement *demuxer = gst_element_factory_make("qtdemux", nullptr);
+    GstElement *decoder = gst_element_factory_make("decodebin3", nullptr);
+    GstElement *converter = gst_element_factory_make("videoconvert", nullptr);
+    GstElement *tee = gst_element_factory_make("tee", "t");
 
     if (!pipeline || !source || !demuxer || !decoder || !converter || !tee) {
         gst_printerrln("One element could not be created. Exiting."); // 𓆏
@@ -56,9 +56,13 @@ bool VideoPlayer::init() {
 
     g_object_set(G_OBJECT(source), "location", settings.filename, NULL);
 
-    GstBus *bus = gst_pipeline_get_bus(GST_PIPELINE(pipeline));
-    gst_bus_add_watch(bus, busCall, this);
-    gst_object_unref(bus);
+    GstBus *bus;
+    if ((bus = gst_pipeline_get_bus(GST_PIPELINE(pipeline))) != nullptr) {
+        gst_bus_add_watch(bus, onBusMessage, this);
+        gst_object_unref(bus);
+        bus = nullptr;
+    }
+
     return true;
 }
 
@@ -82,8 +86,15 @@ void VideoPlayer::stop() {
 }
 
 bool VideoPlayer::addWindow(guintptr wid) {
+    GstElement *tee = gst_bin_get_by_name(GST_BIN(pipeline), "t");
+    if (tee == nullptr) {
+        gst_printerrln("Tee not found in pipeline.");
+        return false;
+    }
+
     GstElement *queue = gst_element_factory_make("queue", nullptr);
     GstElement *sink;
+
     switch (settings.overlay) {
         case xvimagesink:
             sink = gst_element_factory_make("xvimagesink", nullptr);
@@ -107,10 +118,14 @@ bool VideoPlayer::addWindow(guintptr wid) {
         return false;
     }
 
+    g_object_set(G_OBJECT(queue), "max-size-buffers", 2, "max-size-time", 0, "max-size-bytes", 0, NULL);
+
     gst_bin_add_many(GST_BIN(pipeline), queue, sink, NULL);
     gst_element_link_many(tee, queue, sink, NULL);
 
     gst_video_overlay_set_window_handle(GST_VIDEO_OVERLAY(sink), wid);
+
+    tee = queue = sink = nullptr;
 
     return true;
 }
@@ -127,7 +142,7 @@ void VideoPlayer::onNewPad(GstElement *element, GstPad *pad, GstElement *data) {
     g_object_unref(sink_pad);
 }
 
-gboolean VideoPlayer::busCall(GstBus *bus, GstMessage *msg, gpointer data) {
+gboolean VideoPlayer::onBusMessage(GstBus *bus, GstMessage *msg, gpointer data) {
     VideoPlayer *player = static_cast<VideoPlayer*>(data);
     switch (GST_MESSAGE_TYPE(msg)) {
         case GST_MESSAGE_EOS: {
