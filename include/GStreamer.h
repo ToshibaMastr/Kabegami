@@ -24,19 +24,19 @@
 #pragma once
 #include <gst/gst.h>
 
-enum VideoDecoderOptions {
-    ForceVideoDecoderDefault = 0,
-    ForceVideoDecoderSoftware,
-    ForceVideoDecoderNVIDIA,
-    ForceVideoDecoderVAAPI,
-    ForceVideoDecoderDirectX3D
+enum DecoderType {
+    Default = 0,
+    Software,
+    NVIDIA,
+    VAAPI,
+    DirectX3D
 };
 
 class GStreamer {
 public:
     static bool initialize(int argc, char* argv[]);
     static void enableDebug(int debuglevel);
-    static bool blacklist(VideoDecoderOptions option);
+    static bool blacklist(DecoderType option);
 
 private:
     static void gst_log(GstDebugCategory * category,

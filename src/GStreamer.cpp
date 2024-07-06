@@ -83,7 +83,7 @@ void GStreamer::enableDebug(int debuglevel) {
     }
 }
 
-bool GStreamer::blacklist(VideoDecoderOptions option) {
+bool GStreamer::blacklist(DecoderType option) {
     GstRegistry* registry = gst_registry_get();
 
     if (registry == nullptr) {
@@ -106,24 +106,24 @@ bool GStreamer::blacklist(VideoDecoderOptions option) {
 
     bool black = false;
     switch (option) {
-    case ForceVideoDecoderDefault:
+    case Default:
         break;
-    case ForceVideoDecoderSoftware:
+    case Software:
         for (auto name : { "avdec_h264", "avdec_h265" }) {
             black |= changeRank(name, GST_RANK_PRIMARY + 1);
         }
         break;
-    case ForceVideoDecoderVAAPI:
+    case VAAPI:
         for (auto name : { "vajpegdec", "vampeg2dec", "vah264dec", "vah265dec", "vaav1dec" }) {
             black |= changeRank(name, GST_RANK_PRIMARY + 1);
         }
         break;
-    case ForceVideoDecoderNVIDIA:
+    case NVIDIA:
         for (auto name : { "nvh265dec", "nvh265sldec", "nvh264dec", "nvh264sldec" }) {
             black |= changeRank(name, GST_RANK_PRIMARY + 1);
         }
         break;
-    case ForceVideoDecoderDirectX3D:
+    case DirectX3D:
         for (auto name : { "d3d11vp9dec", "d3d11h265dec", "d3d11h264dec" }) {
             black |= changeRank(name, GST_RANK_PRIMARY + 1);
         }

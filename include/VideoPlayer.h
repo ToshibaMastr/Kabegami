@@ -19,23 +19,25 @@
 
 #pragma once
 #include <gst/gst.h>
+#include "GStreamer.h"
 
-enum VideoOverlayOptions {
+enum OverlayType {
     xvimagesink = 0,
     glimagesink,
     waylandsink,
     d3dvideosink
 };
 
-enum VideoQualityOptions {
+enum QualityType {
     high = 0,
     medium,
     low
 };
 
 struct VideoSettings {
-    VideoOverlayOptions overlay = xvimagesink;
-    VideoQualityOptions quality = medium;
+    OverlayType overlay = xvimagesink;
+    DecoderType decoder = xvimagesink;
+    QualityType quality = medium;
     bool loop = false;
     const char *filename;
 };
