@@ -22,8 +22,11 @@
  */
 
 #include <cstdint>
+#include <gst/gst.h>
 #include "GStreamer.h"
 #include "KLoggeg.h"
+
+GMainLoop* GStreamer::loop = nullptr;
 
 void gst_log(GstDebugCategory * category,
                     GstDebugLevel      level,
@@ -71,6 +74,9 @@ bool GStreamer::initialize(int argc, char* argv[]) {
         g_error_free(gerror);
         return false;
     }
+    gst_init(&argc, &argv);
+
+    GMainLoop *loop = g_main_loop_new(NULL, FALSE);
     return true;
 }
 
@@ -132,4 +138,25 @@ bool GStreamer::blacklist(DecoderType option) {
         return false;
     }
     return black;
+}
+
+bool GStreamer::createMainLoop() {
+    loop = g_main_loop_new(NULL, FALSE);
+    return loop != nullptr ? true : false;
+}
+
+void GStreamer::runMainLoop() {
+    g_main_loop_run(loop);
+}
+
+void GStreamer::cleanup() {
+    if (loop) {
+        g_main_loop_quit(loop);
+        loop = nullptr;
+    }
+    gst_deinit();
+}
+
+GMainLoop* GStreamer::getMainLoop() {
+    return loop;
 }

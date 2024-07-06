@@ -37,4 +37,11 @@ public:
     static bool initialize(int argc, char* argv[]);
     static void enableDebug(int debuglevel);
     static bool blacklist(DecoderType option);
+    static bool createMainLoop();
+    static void runMainLoop();
+    static GMainLoop* getMainLoop();
+    static void cleanup();
+
+private:
+    static GMainLoop* loop;
 };

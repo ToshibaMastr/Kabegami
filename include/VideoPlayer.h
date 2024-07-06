@@ -44,7 +44,7 @@ struct VideoSettings {
 
 class VideoPlayer {
 public:
-    VideoPlayer(GMainLoop *loop, const VideoSettings& settings);
+    VideoPlayer(const VideoSettings& settings);
     ~VideoPlayer();
 
     bool init();

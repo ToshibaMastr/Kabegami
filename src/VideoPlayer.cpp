@@ -19,9 +19,10 @@
 
 #include "VideoPlayer.h"
 #include <gst/video/videooverlay.h>
+#include "GStreamer.h"
 #include "KLoggeg.h"
 
-VideoPlayer::VideoPlayer(GMainLoop *loop, const VideoSettings& settings) : settings(settings) , loop(loop) {}
+VideoPlayer::VideoPlayer(const VideoSettings& settings) : settings(settings), loop(GStreamer::getMainLoop()) {}
 
 VideoPlayer::~VideoPlayer() {
     stop();

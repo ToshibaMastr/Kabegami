@@ -43,11 +43,9 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
-    gst_init(&argc, &argv);
+    GStreamer::createMainLoop();
 
-    GMainLoop *loop = g_main_loop_new(NULL, FALSE);
-
-    VideoPlayer videoPlayer(loop, settings);
+    VideoPlayer videoPlayer(settings);
     if (!videoPlayer.init()) {
         return -1;
     }
@@ -74,13 +72,13 @@ int main(int argc, char *argv[]) {
         return -1;
     }
 
-    g_main_loop_run(loop);
+    GStreamer::runMainLoop();
 
     videoPlayer.stop();
 
     windows.clear();
 
     XrandrManager::cleanup();
-    gst_deinit();
+    GStreamer::cleanup();
     return 0;
 }
