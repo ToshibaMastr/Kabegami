@@ -17,7 +17,7 @@
 
 cmake_minimum_required(VERSION 3.10)
 
-project(Kabegami VERSION 1.0)
+project(Kabegami VERSION 1.1)
 
 
 set(CMAKE_CXX_STANDARD 23)
@@ -72,4 +72,5 @@ add_custom_target(uninstall
 add_compile_definitions(
     PROJECT_NAME="${PROJECT_NAME}"
     EXECUTABLE_NAME="${EXECUTABLE_NAME}"
+    PROJECT_VERSION="${PROJECT_VERSION}"
 )

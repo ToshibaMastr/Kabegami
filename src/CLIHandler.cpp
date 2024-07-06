@@ -52,6 +52,7 @@ bool CLIHandler::splitArgs(const int argc, char *argv[], VideoSettings& settings
         {"loop", no_argument, 0, 'l'},
         {"quality", required_argument, 0, 'q'},
         {"gst-debug-level", required_argument, 0, 'd'},
+        {"version", no_argument, 0, 'v'},
         {"help", no_argument, 0, 'h'},
         {0, 0, 0, 0}
     };
@@ -59,7 +60,7 @@ bool CLIHandler::splitArgs(const int argc, char *argv[], VideoSettings& settings
     int opt;
     int option_index = 0;
 
-    while ((opt = getopt_long(argc, argv, "o:f:lq:d:h", long_options, &option_index)) != -1) {
+    while ((opt = getopt_long(argc, argv, "o:f:lq:d:vh", long_options, &option_index)) != -1) {
         int ret;
         switch (opt) {
         case 'o':
@@ -90,6 +91,9 @@ bool CLIHandler::splitArgs(const int argc, char *argv[], VideoSettings& settings
         case 'd':
             GStreamer::enableDebug(atoi(optarg));
             break;
+        case 'v':
+            std::cout << PROJECT_NAME << " " << PROJECT_VERSION << "\n";
+            return true;
         case 'h':
             printHelp(EXECUTABLE_NAME);
             return true;
