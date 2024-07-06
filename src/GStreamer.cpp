@@ -22,11 +22,10 @@
  */
 
 #include <cstdint>
-#include <iostream>
-#include <gst/gst.h>
 #include "GStreamer.h"
+#include "KLoggeg.h"
 
-void GStreamer::gst_log(GstDebugCategory * category,
+void gst_log(GstDebugCategory * category,
                     GstDebugLevel      level,
                     const gchar      * file,
                     const gchar      * function,
@@ -44,20 +43,20 @@ void GStreamer::gst_log(GstDebugCategory * category,
     switch (level) {
     default:
     case GST_LEVEL_ERROR:
-        std::cerr << file << ":" << line << " " << function << " [CRITICAL] " << object_info << " " << gst_debug_message_get(message) << std::endl;
+        error("GStreamer") << file << ":" << line << " " << function << " [CRITICAL] " << object_info << " " << gst_debug_message_get(message);
         break;
     case GST_LEVEL_WARNING:
-        std::cerr << file << ":" << line << " " << function << " [WARNING] " << object_info << " " << gst_debug_message_get(message) << std::endl;
+        warning("GStreamer") << file << ":" << line << " " << function << " [WARNING] " << object_info << " " << gst_debug_message_get(message);
         break;
     case GST_LEVEL_FIXME:
     case GST_LEVEL_INFO:
-        std::cout << file << ":" << line << " " << function << " [INFO] " << object_info << " " << gst_debug_message_get(message) << std::endl;
+        info("GStreamer") << file << ":" << line << " " << function << " [INFO] " << object_info << " " << gst_debug_message_get(message);
         break;
     case GST_LEVEL_DEBUG:
     case GST_LEVEL_LOG:
     case GST_LEVEL_TRACE:
     case GST_LEVEL_MEMDUMP:
-        std::cout << file << ":" << line << " " << function << " [DEBUG] " << object_info << " " << gst_debug_message_get(message) << std::endl;
+        info("GStreamer") << file << ":" << line << " " << function << " [DEBUG] " << object_info << " " << gst_debug_message_get(message);
         break;
     }
 
@@ -66,10 +65,10 @@ void GStreamer::gst_log(GstDebugCategory * category,
 }
 
 bool GStreamer::initialize(int argc, char* argv[]) {
-    GError* error = nullptr;
-    if (!gst_init_check(&argc, &argv, &error)) {
-        gst_printerrln("Gstreamer init check failed: %s", error->message);
-        g_error_free(error);
+    GError* gerror = nullptr;
+    if (!gst_init_check(&argc, &argv, &gerror)) {
+        error("GStreamer") << "Init check failed: " << gerror->message;
+        g_error_free(gerror);
         return false;
     }
     return true;
@@ -87,14 +86,14 @@ bool GStreamer::blacklist(DecoderType option) {
     GstRegistry* registry = gst_registry_get();
 
     if (registry == nullptr) {
-        gst_printerrln("Failed to get gstreamer registry.");
+        error("GStreamer") << "Failed to get registry";
         return false;
     }
 
     auto changeRank = [registry](const char* featureName, uint16_t rank) {
         GstPluginFeature* feature = gst_registry_lookup_feature(registry, featureName);
         if (feature == nullptr) {
-            gst_printerrln("Failed to change ranking of feature. Featuer does not exist: %s", featureName);
+            error("GStreamer") << "Failed to change ranking of feature. Featuer does not exist: " << featureName;
             return false;
         }
 
@@ -129,7 +128,7 @@ bool GStreamer::blacklist(DecoderType option) {
         }
         break;
     default:
-        gst_printerrln("Can't handle decode option: %d", option);
+        error("GStreamer") << "Can't handle decode option: " << option;
         return false;
     }
     return black;

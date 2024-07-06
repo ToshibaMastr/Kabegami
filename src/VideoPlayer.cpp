@@ -19,6 +19,7 @@
 
 #include "VideoPlayer.h"
 #include <gst/video/videooverlay.h>
+#include "KLoggeg.h"
 
 VideoPlayer::VideoPlayer(GMainLoop *loop, const VideoSettings& settings) : settings(settings) , loop(loop) {}
 
@@ -35,14 +36,14 @@ bool VideoPlayer::init() {
     GstElement *tee = gst_element_factory_make("tee", "t");
 
     if (!pipeline || !source || !demuxer || !decoder || !converter || !tee) {
-        gst_printerrln("One element could not be created. Exiting."); // 𓆏
+        fatal("VideoPlayer") << "One element could not be created"; // 𓆏
         return false;
     }
 
     gst_bin_add_many(GST_BIN(pipeline), source, demuxer, decoder, converter, tee, NULL);
 
     if (!gst_element_link(source, demuxer)) {
-        gst_printerrln("Source and Demuxer could not be linked.");
+        fatal("VideoPlayer") << "Source and Demuxer could not be linked";
         return false;
     }
 
@@ -50,11 +51,11 @@ bool VideoPlayer::init() {
     g_signal_connect(decoder, "pad-added", G_CALLBACK(onNewPad), converter);
 
     if (!gst_element_link_many(converter, tee, NULL)) {
-        gst_printerrln("Elements could not be linked.");
+        fatal("VideoPlayer") << "Elements could not be linked";
         return false;
     }
 
-    g_object_set(G_OBJECT(source), "location", settings.filename, NULL);
+    g_object_set(G_OBJECT(source), "location", settings.filename.data(), NULL);
 
     GstBus *bus;
     if ((bus = gst_pipeline_get_bus(GST_PIPELINE(pipeline))) != nullptr) {
@@ -69,7 +70,7 @@ bool VideoPlayer::init() {
 bool VideoPlayer::start() {
     GstStateChangeReturn ret = gst_element_set_state(pipeline, GST_STATE_PLAYING);
     if (ret == GST_STATE_CHANGE_FAILURE) {
-        gst_printerrln("Pipeline failed to start.");
+        error("VideoPlayer") << "Pipeline failed to start";
         gst_object_unref(pipeline);
         pipeline = nullptr;
         return false;
@@ -88,33 +89,45 @@ void VideoPlayer::stop() {
 bool VideoPlayer::addWindow(guintptr wid) {
     GstElement *tee = gst_bin_get_by_name(GST_BIN(pipeline), "t");
     if (tee == nullptr) {
-        gst_printerrln("Tee not found in pipeline.");
+        fatal("VideoPlayer") << "Tee not found in pipeline";
         return false;
     }
 
-    GstElement *queue = gst_element_factory_make("queue", nullptr);
+    GstElement *queue;
     GstElement *sink;
+    std::string sink_name;
 
     switch (settings.overlay) {
-        case xvimagesink:
+        case X11:
+            sink_name = "xvimagesink";
             sink = gst_element_factory_make("xvimagesink", nullptr);
             break;
-        case glimagesink:
+        case OpenGL:
+            sink_name = "glimagesink";
             sink = gst_element_factory_make("glimagesink", nullptr);
             break;
-        case waylandsink:
+        case Wayland:
+            sink_name = "waylandsink";
             sink = gst_element_factory_make("waylandsink", nullptr);
             break;
-        case d3dvideosink:
-            sink = gst_element_factory_make("d3dvideosink", nullptr);
+        case DirectX:
+            sink_name = "d3dvideosink";
             break;
         default:
-            gst_printerrln("Invalid video overlay option.");
+            fatal("VideoPlayer") << "Invalid video overlay option";
             return false;
     }
 
-    if (!queue || !sink) {
-        gst_printerrln("One element could not be created. Exiting.");
+    queue = gst_element_factory_make("queue", nullptr);
+    sink = gst_element_factory_make(sink_name.data(), nullptr);
+
+    if (!sink) {
+        fatal("VideoPlayer") << "Failed to create a " << sink_name << " element";
+        return false;
+    }
+
+    if (!queue) {
+        fatal("VideoPlayer") << "Failed to create a queue element";
         return false;
     }
 
@@ -137,7 +150,7 @@ void VideoPlayer::onNewPad(GstElement *element, GstPad *pad, GstElement *data) {
         return;
     }
     if (gst_pad_link(pad, sink_pad) != GST_PAD_LINK_OK) {
-        gst_printerrln("Failed to link pads.");
+        error("VideoPlayer") << "Failed to link pads";
     }
     g_object_unref(sink_pad);
 }
@@ -159,7 +172,7 @@ gboolean VideoPlayer::onBusMessage(GstBus *bus, GstMessage *msg, gpointer data) 
             gchar *debug;
             gst_message_parse_error(msg, &err, &debug);
             g_free(debug);
-            gst_printerrln("Error: %s", err->message);
+            error("VideoPlayer") << "Error: " << err->message;
             g_error_free(err);
             g_main_loop_quit(player->loop);
             player->stop();

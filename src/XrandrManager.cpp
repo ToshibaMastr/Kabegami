@@ -18,12 +18,21 @@
  */
 
 #include "XrandrManager.h"
+#include "KLoggeg.h"
 
 Display* XrandrManager::display = nullptr;
 Window XrandrManager::root = None;
 std::vector<MonitorInfo> XrandrManager::monitors;
 
+int x_log(Display *display, XErrorEvent *xerror) {
+    char errorText[256];
+    XGetErrorText(display, xerror->error_code, errorText, sizeof(errorText));
+    error("X11") << errorText;
+    return 0;
+}
+
 bool XrandrManager::initialize() {
+    XSetErrorHandler(x_log);
     display = XOpenDisplay(nullptr);
     if (!display) {
         return false;

@@ -18,14 +18,14 @@
  */
 
 #pragma once
-#include <gst/gst.h>
 #include "GStreamer.h"
+#include <string>
 
 enum OverlayType {
-    xvimagesink = 0,
-    glimagesink,
-    waylandsink,
-    d3dvideosink
+    X11 = 0,
+    OpenGL,
+    Wayland,
+    DirectX
 };
 
 enum QualityType {
@@ -35,11 +35,11 @@ enum QualityType {
 };
 
 struct VideoSettings {
-    OverlayType overlay = xvimagesink;
-    DecoderType decoder = xvimagesink;
+    OverlayType overlay = X11;
+    DecoderType decoder = Default;
     QualityType quality = medium;
     bool loop = false;
-    const char *filename;
+    std::string filename;
 };
 
 class VideoPlayer {

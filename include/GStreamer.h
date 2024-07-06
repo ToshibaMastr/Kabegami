@@ -37,14 +37,4 @@ public:
     static bool initialize(int argc, char* argv[]);
     static void enableDebug(int debuglevel);
     static bool blacklist(DecoderType option);
-
-private:
-    static void gst_log(GstDebugCategory * category,
-                        GstDebugLevel      level,
-                        const gchar      * file,
-                        const gchar      * function,
-                        gint               line,
-                        GObject          * object,
-                        GstDebugMessage  * message,
-                        gpointer           data);
 };
