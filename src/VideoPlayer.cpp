@@ -22,14 +22,10 @@
 #include "GStreamer.h"
 #include "KLoggeg.h"
 
-VideoPlayer::VideoPlayer() : loop(GStreamer::getMainLoop()) {}
+VideoPlayer::VideoPlayer(const VideoSettings& settings) : settings(settings), loop(GStreamer::getMainLoop()) {}
 
 VideoPlayer::~VideoPlayer() {
     stop();
-}
-
-void VideoPlayer::setSettings(const VideoSettings& settings) {
-    this->settings = settings;
 }
 
 bool VideoPlayer::init() {
@@ -177,7 +173,7 @@ gboolean VideoPlayer::onBusMessage(GstBus *bus, GstMessage *msg, gpointer data) 
             gchar *debug;
             gst_message_parse_error(msg, &err, &debug);
             g_free(debug);
-            error("VideoPlayer") << "Error: " << err->message;
+            error("VideoPlayer") << err->message;
             g_error_free(err);
             g_main_loop_quit(player->loop);
             player->stop();

@@ -22,37 +22,30 @@
 #include "GStreamer.h"
 #include "CLIHandler.h"
 #include "KLoggeg.h"
+#include <csignal>
 #include <cstdlib>
 #include <memory>
 #include <vector>
 
-std::vector<std::unique_ptr<XWPWindow>> windows;
-VideoPlayer videoPlayer;
-
 void cleanup() {
-    windows.clear();
-    videoPlayer.stop();
-
+    info("Main") << "cleanup";
     XrandrManager::cleanup();
     GStreamer::cleanup();
 }
 
 void signal_handler(int signal) {
+    info("Main") << "Received " << signal << " signal";
     switch (signal) {
         case SIGINT:
         case SIGTERM:
             cleanup();
-            exit(0);
+            std::exit(0);
     }
 }
 
 int ProjectMain(int argc, char *argv[]) {
-    if (!GStreamer::initialize(argc, argv)){
-        fatal("GStreamer") << "Failed to initialize";
-        return -1;
-    }
-    if (!XrandrManager::initialize()) {
-        fatal("XrandrManager") << "Failed to initialize";
+    if (!GStreamer::initialize(argc, argv) ||
+        !XrandrManager::initialize()){
         return -1;
     }
 
@@ -64,24 +57,28 @@ int ProjectMain(int argc, char *argv[]) {
         return 0;
     }
 
-    GStreamer::createMainLoop();
+    if (!GStreamer::createMainLoop()) {
+        return -1;
+    }
 
-    videoPlayer.setSettings(settings);
+    VideoPlayer videoPlayer(settings);
     if (!videoPlayer.init()) {
         return -1;
     }
 
     auto monitors = XrandrManager::getMonitors();
+    std::vector<std::unique_ptr<XWPWindow>> windows;
 
     for (const auto& monitor : monitors) {
         auto window = std::make_unique<XWPWindow>();
-        if (!window->createWindow(monitor) && !videoPlayer.addWindow(window->getWindow())) {
-            fatal("XrandrManager") << "name: " << monitor.name << ", resolution: " << monitor.width << "x" << monitor.height;
+        if (!window->createWindow(monitor) ||
+            !videoPlayer.addWindow(window->getWindow())) {
+            error("Main") << "Failed to create window: "
+                          << monitor.name << ", resolution: " << monitor.width << "x" << monitor.height;
             continue;
         }
 
         windows.push_back(std::move(window));
-
         info("XrandrManager") << "name: " << monitor.name << ", resolution: " << monitor.width << "x" << monitor.height;
     }
 
@@ -91,12 +88,19 @@ int ProjectMain(int argc, char *argv[]) {
 
     GStreamer::runMainLoop();
 
+    if (windows.empty()) {
+        windows.clear();
+    }
+
+    if (!videoPlayer.start()) {
+        videoPlayer.stop();
+    }
     return 0;
 }
 
 int main(int argc, char *argv[]) {
-    signal(SIGINT, signal_handler);
-    signal(SIGTERM, signal_handler);
+    std::signal(SIGINT, signal_handler);
+    std::signal(SIGTERM, signal_handler);
 
     int ret = ProjectMain(argc, argv);
     cleanup();

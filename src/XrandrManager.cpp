@@ -35,6 +35,7 @@ bool XrandrManager::initialize() {
     XSetErrorHandler(x_log);
     display = XOpenDisplay(nullptr);
     if (!display) {
+        fatal("XrandrManager") << "Failed to initialize";
         return false;
     }
     root = DefaultRootWindow(display);

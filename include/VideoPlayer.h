@@ -44,7 +44,7 @@ struct VideoSettings {
 
 class VideoPlayer {
 public:
-    VideoPlayer();
+    VideoPlayer(const VideoSettings& settings);
     ~VideoPlayer();
 
     bool init();

@@ -70,13 +70,11 @@ void gst_log(GstDebugCategory * category,
 bool GStreamer::initialize(int argc, char* argv[]) {
     GError* gerror = nullptr;
     if (!gst_init_check(&argc, &argv, &gerror)) {
-        error("GStreamer") << "Init check failed: " << gerror->message;
+        fatal("GStreamer") << "Init check failed: " << gerror->message;
         g_error_free(gerror);
         return false;
     }
     gst_init(&argc, &argv);
-
-    GMainLoop *loop = g_main_loop_new(NULL, FALSE);
     return true;
 }
 
@@ -142,7 +140,11 @@ bool GStreamer::blacklist(DecoderType option) {
 
 bool GStreamer::createMainLoop() {
     loop = g_main_loop_new(NULL, FALSE);
-    return loop != nullptr ? true : false;
+    if (!loop) {
+        fatal("GStreamer") << "Can't create loop";
+        return false;
+    }
+    return true;
 }
 
 void GStreamer::runMainLoop() {
@@ -152,6 +154,7 @@ void GStreamer::runMainLoop() {
 void GStreamer::cleanup() {
     if (loop) {
         g_main_loop_quit(loop);
+        g_main_loop_unref(loop);
         loop = nullptr;
     }
     gst_deinit();
