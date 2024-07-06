@@ -166,6 +166,7 @@ int main(int argc, char *argv[]) {
 
     VideoPlayer videoPlayer(loop, settings);
     if (!videoPlayer.init()) {
+        std::cerr << "Failed to init VideoPlayer\n\n";
         return -1;
     }
 
@@ -186,6 +187,7 @@ int main(int argc, char *argv[]) {
     }
 
     if (!videoPlayer.start()) {
+        std::cerr << "Failed to start VideoPlayer\n\n";
         return -1;
     }
 
