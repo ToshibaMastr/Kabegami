@@ -21,7 +21,7 @@
 #include "VideoPlayer.h"
 #include "GStreamer.h"
 #include "CLIHandler.h"
-#include "KLoggeg.h"W
+#include "KLoggeg.h"
 #include <memory>
 #include <vector>
 
