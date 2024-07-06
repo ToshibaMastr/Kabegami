@@ -38,8 +38,8 @@ void signal_handler(int signal) {
     switch (signal) {
         case SIGINT:
         case SIGTERM:
-            cleanup();
-            std::exit(0);
+            GStreamer::quitMainLoop();
+            break;
     }
 }
 

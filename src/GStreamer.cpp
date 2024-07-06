@@ -151,9 +151,13 @@ void GStreamer::runMainLoop() {
     g_main_loop_run(loop);
 }
 
+void GStreamer::quitMainLoop() {
+    g_main_loop_quit(loop);
+}
+
 void GStreamer::cleanup() {
     if (loop) {
-        g_main_loop_quit(loop);
+        quitMainLoop();
         g_main_loop_unref(loop);
         loop = nullptr;
     }

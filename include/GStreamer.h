@@ -39,6 +39,7 @@ public:
     static bool blacklist(DecoderType option);
     static bool createMainLoop();
     static void runMainLoop();
+    static void quitMainLoop();
     static GMainLoop* getMainLoop();
     static void cleanup();
 
