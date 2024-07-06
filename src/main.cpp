@@ -17,11 +17,10 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <X11/Xlib.h>
-#include <X11/extensions/Xrandr.h>
 #include "XWPWindow.h"
 #include "VideoPlayer.h"
 #include "GStreamer.h"
+#include <memory>
 #include <vector>
 #include <iostream>
 #include <getopt.h>
@@ -151,6 +150,10 @@ int main(int argc, char *argv[]) {
         std::cerr << "Failed to initialize Gstreamer\n\n";
         return -1;
     }
+    if (!XrandrManager::initialize()) {
+        std::cerr << "Failed to initialize Xrandr\n\n";
+        return -1;
+    }
 
     VideoSettings settings;
     if(splitArgs(argc, argv, settings)){
@@ -166,57 +169,21 @@ int main(int argc, char *argv[]) {
         return -1;
     }
 
-    Display *display = XOpenDisplay(NULL);
-    if (!display) {
-        std::cerr << "Unable to open X display\n\n";
-        return -1;
-    }
+    std::vector<MonitorInfo> monitors = XrandrManager::getMonitors();
+    std::vector<std::unique_ptr<XWPWindow>> windows;
 
-    Window root = DefaultRootWindow(display);
-    XRRScreenResources *screen_resources = XRRGetScreenResources(display, root);
-    if (!screen_resources) {
-        std::cerr << "Unable to get screen resources\n";
-        XCloseDisplay(display);
-        return -1;
-    }
-
-    int num_screens = screen_resources->noutput;
-    std::vector<XWPWindow> windows(num_screens);
-
-    for (int i = 0; i < num_screens; i++) {
-        XRRCrtcInfo *crtc_info = XRRGetCrtcInfo(display, screen_resources, screen_resources->crtcs[i]);
-        if (!crtc_info) {
-            std::cerr << "Unable to get CRTC info for screen " << i << "\n\n";
-            XRRFreeScreenResources(screen_resources);
-            XCloseDisplay(display);
+    for (const auto& monitor : monitors) {
+        auto window = std::make_unique<XWPWindow>();
+        if (!window->createWindow(monitor)) {
+            std::cerr << "Failed to create window for screen " << monitor.name << "\n\n";
             return -1;
         }
 
-        if (crtc_info->noutput > 0) {
-            XRROutputInfo *output_info = XRRGetOutputInfo(display, screen_resources, crtc_info->outputs[0]);
-            if (output_info == NULL) {
-                fprintf(stderr, "Failed to get output info\n");
-                XRRFreeCrtcInfo(crtc_info);
-                continue;
-            }
+        videoPlayer.addWindow(window->getWindow());
+        windows.push_back(std::move(window));
 
-            std::cout << "id: " << i << ", name: " << output_info->name << ", resolution: " << crtc_info->width << "x" << crtc_info->height << "\n";
-            XRRFreeOutputInfo(output_info);
-        }
-
-        if (!windows[i].createWindow(crtc_info->x, crtc_info->y, crtc_info->width, crtc_info->height)) {
-            std::cerr << "Failed to create window for screen " << i << "\n\n";
-            XRRFreeCrtcInfo(crtc_info);
-            XRRFreeScreenResources(screen_resources);
-            XCloseDisplay(display);
-            return -1;
-        }
-        videoPlayer.addWindow(windows[i].getWindow());
-        XRRFreeCrtcInfo(crtc_info);
+        std::cout << "name: " << monitor.name << ", resolution: " << monitor.width << "x" << monitor.height << "\n";
     }
-
-    XRRFreeScreenResources(screen_resources);
-    XCloseDisplay(display);
 
     if (!videoPlayer.start()) {
         return -1;
@@ -225,10 +192,10 @@ int main(int argc, char *argv[]) {
     g_main_loop_run(loop);
 
     videoPlayer.stop();
-    for (auto& window : windows) {
-        window.closeWindow();
-    }
 
+    windows.clear();
+
+    XrandrManager::cleanup();
     gst_deinit();
     return 0;
 }

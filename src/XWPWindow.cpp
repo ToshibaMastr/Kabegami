@@ -19,22 +19,17 @@
 
 #include "XWPWindow.h"
 
-XWPWindow::XWPWindow() : display(nullptr), win(0) {}
+XWPWindow::XWPWindow() : win(None) {}
 
 XWPWindow::~XWPWindow() {
-    closeWindow();
+    destroyWindow();
 }
 
-bool XWPWindow::createWindow(int x, int y, int width, int height) {
-    display = XOpenDisplay(NULL);
-    if (!display) {
-        return false;
-    }
+bool XWPWindow::createWindow(const MonitorInfo& monitorInfo) {
+    destroyWindow();
 
-    if (x < 0) x = 0;
-    if (y < 0) y = 0;
-
-    Window root = DefaultRootWindow(display);
+    Display* display = XrandrManager::getDisplay();
+    Window root = XrandrManager::getRoot();
 
     XSetWindowAttributes attrs;
     attrs.event_mask = NoEventMask;
@@ -43,7 +38,8 @@ bool XWPWindow::createWindow(int x, int y, int width, int height) {
     attrs.backing_store = Always;
 
     win = XCreateWindow(display, root,
-                        x, y, width, height,
+                        monitorInfo.x, monitorInfo.y,
+                        monitorInfo.width, monitorInfo.height,
                         0, CopyFromParent, InputOutput,
                         CopyFromParent, CWBackingStore, &attrs);
 
@@ -82,13 +78,13 @@ bool XWPWindow::createWindow(int x, int y, int width, int height) {
     return true;
 }
 
-void XWPWindow::closeWindow() {
-    if (display) {
-        XCloseDisplay(display);
-        display = nullptr;
-    }
-}
-
 Window XWPWindow::getWindow() const {
     return win;
+}
+
+void XWPWindow::destroyWindow()  {
+    if (win != None) {
+        XDestroyWindow(XrandrManager::getDisplay(), win);
+        win = None;
+    }
 }

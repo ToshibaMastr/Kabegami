@@ -1,5 +1,5 @@
 /*
- * File name: XWPWindow.h
+ * File name: XrandrManager.h
  * Author: ToshibaMastru
  * Copyright (c) 2024 ToshibaMastru
  *
@@ -18,20 +18,33 @@
  */
 
 #pragma once
+#include <X11/Xlib.h>
+#include <X11/extensions/Xrandr.h>
+#include <vector>
+#include <string>
 
-#include <X11/Xatom.h>
-#include "XrandrManager.h"
+struct MonitorInfo {
+    std::string name;
+    int width;
+    int height;
+    int x;
+    int y;
+    bool primary;
+};
 
-class XWPWindow {
+class XrandrManager {
 public:
-    XWPWindow();
-    ~XWPWindow();
-
-    bool createWindow(const MonitorInfo& monitorInfo);
-    Window getWindow() const;
+    static bool initialize();
+    static void cleanup();
+    static Display* getDisplay() { return display; }
+    static Window getRoot() { return root; }
+    static std::vector<MonitorInfo> getMonitors();
+    static MonitorInfo getPrimaryMonitor();
 
 private:
-    Window win;
+    static Display* display;
+    static Window root;
 
-    void destroyWindow();
+    static void updateMonitorInfo();
+    static std::vector<MonitorInfo> monitors;
 };
