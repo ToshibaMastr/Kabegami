@@ -69,7 +69,7 @@ private:
 
 class CLIHandler {
 public:
-    static bool initialize(int debuglevel);
+    static bool setLoggingLevel(int logginglevel);
     static bool splitArgs(const int argc, char *argv[], VideoSettings& settings);
     static void printHelp(std::string& prog_name);
     static void printHelp(const char* prog_name);
@@ -77,4 +77,7 @@ public:
     static Logger logger(Logger::Level level, const std::string& context) {
         return Logger(Logger::Level::Info, context);
     }
+
+private:
+    int logginglevel;
 };
