@@ -44,13 +44,14 @@ struct VideoSettings {
 
 class VideoPlayer {
 public:
-    VideoPlayer(const VideoSettings& settings);
+    VideoPlayer();
     ~VideoPlayer();
 
     bool init();
     bool start();
     void stop();
 
+    void setSettings(const VideoSettings& settings);
     bool addWindow(guintptr wid);
 
 private:

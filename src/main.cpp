@@ -22,10 +22,31 @@
 #include "GStreamer.h"
 #include "CLIHandler.h"
 #include "KLoggeg.h"
+#include <cstdlib>
 #include <memory>
 #include <vector>
 
-int main(int argc, char *argv[]) {
+std::vector<std::unique_ptr<XWPWindow>> windows;
+VideoPlayer videoPlayer;
+
+void cleanup() {
+    windows.clear();
+    videoPlayer.stop();
+
+    XrandrManager::cleanup();
+    GStreamer::cleanup();
+}
+
+void signal_handler(int signal) {
+    switch (signal) {
+        case SIGINT:
+        case SIGTERM:
+            cleanup();
+            exit(0);
+    }
+}
+
+int ProjectMain(int argc, char *argv[]) {
     if (!GStreamer::initialize(argc, argv)){
         fatal("GStreamer") << "Failed to initialize";
         return -1;
@@ -45,22 +66,18 @@ int main(int argc, char *argv[]) {
 
     GStreamer::createMainLoop();
 
-    VideoPlayer videoPlayer(settings);
+    videoPlayer.setSettings(settings);
     if (!videoPlayer.init()) {
         return -1;
     }
 
-    std::vector<MonitorInfo> monitors = XrandrManager::getMonitors();
-    std::vector<std::unique_ptr<XWPWindow>> windows;
+    auto monitors = XrandrManager::getMonitors();
 
     for (const auto& monitor : monitors) {
         auto window = std::make_unique<XWPWindow>();
-        if (!window->createWindow(monitor)) {
-            return -1;
-        }
-
-        if (!videoPlayer.addWindow(window->getWindow())) {
-            return -1;
+        if (!window->createWindow(monitor) && !videoPlayer.addWindow(window->getWindow())) {
+            fatal("XrandrManager") << "name: " << monitor.name << ", resolution: " << monitor.width << "x" << monitor.height;
+            continue;
         }
 
         windows.push_back(std::move(window));
@@ -74,11 +91,14 @@ int main(int argc, char *argv[]) {
 
     GStreamer::runMainLoop();
 
-    videoPlayer.stop();
-
-    windows.clear();
-
-    XrandrManager::cleanup();
-    GStreamer::cleanup();
     return 0;
+}
+
+int main(int argc, char *argv[]) {
+    signal(SIGINT, signal_handler);
+    signal(SIGTERM, signal_handler);
+
+    int ret = ProjectMain(argc, argv);
+    cleanup();
+    return ret;
 }

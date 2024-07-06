@@ -22,10 +22,14 @@
 #include "GStreamer.h"
 #include "KLoggeg.h"
 
-VideoPlayer::VideoPlayer(const VideoSettings& settings) : settings(settings), loop(GStreamer::getMainLoop()) {}
+VideoPlayer::VideoPlayer() : loop(GStreamer::getMainLoop()) {}
 
 VideoPlayer::~VideoPlayer() {
     stop();
+}
+
+void VideoPlayer::setSettings(const VideoSettings& settings) {
+    this->settings = settings;
 }
 
 bool VideoPlayer::init() {
